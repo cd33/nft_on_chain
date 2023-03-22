@@ -1,9 +1,12 @@
 import { expect } from "chai";
+import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import { NFTOnChain } from "../typechain-types";
 
 describe("NFTOnChain", function () {
   let onChain: NFTOnChain;
+  const price: BigNumber = ethers.utils.parseEther("0.0001")
+  const receiver = "0xD9453F5E2696604703076835496F81c3753C3Bb3"
 
   beforeEach(async function () {
     [this.owner, this.investor, this.user, this.toto, this.badguy] =
@@ -16,9 +19,23 @@ describe("NFTOnChain", function () {
     await onChain.deployed();
   });
 
-  describe("Test", function () {
+  describe("Mint", function () {
     it("Should work", async function () {
-      // console.log('data :>> ', await onChain.buildImage());
+      const balanceReceiverBefore = await ethers.provider.getBalance(receiver)
+      const balanceInvestorBefore = await ethers.provider.getBalance(this.investor.address)
+
+      await onChain.connect(this.investor).mint(3, {value: price.mul(3)})
+      const NFT1 = await onChain.tokenURI(1)
+      const NFT2 = await onChain.tokenURI(2)
+      const NFT3 = await onChain.tokenURI(3)
+      console.log('NFT1 :>> ', NFT1);
+      console.log('NFT2 :>> ', NFT2);
+      console.log('NFT3 :>> ', NFT3);
+
+      const balanceReceiverAfter = await ethers.provider.getBalance(receiver)
+      const balanceInvestorAfter = await ethers.provider.getBalance(this.investor.address)
+      expect(balanceReceiverAfter).to.equal(balanceReceiverBefore.add(price.mul(3)))
+      expect(balanceInvestorAfter).to.be.lt(balanceInvestorBefore)
     });
   });
 });
